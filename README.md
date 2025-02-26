@@ -1,0 +1,2 @@
+# ManageInventoryAdmin
+Admin Part
