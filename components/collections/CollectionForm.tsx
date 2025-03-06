@@ -14,6 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 
 // Creamos el schema
@@ -45,21 +46,49 @@ const CollectionForm = () => {
     <div className="p-10">
       <p className="text-heading2-bold">Create Collection</p>
       <Separator className="bg-grey-1 mt-4 mb-7" />
-      return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/*Form field título*/}
         <FormField
           control={form.control}
-          title="username"
+          name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>Title</FormLabel>
               <FormControl>
-                <Input placeholder="shadcn" {...field} />
+                <Input placeholder="Title" {...field} />
               </FormControl>
               <FormDescription>
-                This is your public display name.
+                {/*Aquí va una descripción si queremos*/}
               </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {/*Form field título*/}
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                {/*Con esto indicamos que como maximo 5 filas de Description*/}
+                <Textarea placeholder="Description" {...field} rows={5}/> 
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        {/*Form field título*/}
+        <FormField
+          control={form.control}
+          name="image"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Image</FormLabel>
+              <FormControl>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -67,7 +96,6 @@ const CollectionForm = () => {
         <Button type="submit">Submit</Button>
       </form>
     </Form>
-  )
     </div>
   )
 }
