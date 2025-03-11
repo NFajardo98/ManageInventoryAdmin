@@ -13,7 +13,7 @@ import {
       label: "Dashboard",
     },
     {
-      url: "/collections",
+      url: "/collections/new",
       icon: <Shapes />,
       label: "Collections",
     },
