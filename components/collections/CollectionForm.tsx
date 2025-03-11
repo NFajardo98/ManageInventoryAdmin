@@ -18,6 +18,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import ImageUpload from '../custom ui/ImageUpload'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import toast from 'react-hot-toast'
 
 // Creamos el schema
 const formSchema = z.object({
@@ -30,6 +32,9 @@ const formSchema = z.object({
 const CollectionForm = () => {
   //Router permite interactuar con el enrutador de Next.js dentro de un componente funcional de React. (Para manejar navegacion en la app)
   const router = useRouter()
+  // Para controlar errores
+  const[loading, setLoading] = useState(false)
+  
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -42,10 +47,23 @@ const CollectionForm = () => {
 
   // 2. Define a submit handler.
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values)
-  }
+    try {
+      setLoading(true);
+      const res = await fetch("/api/collections", {
+        method: "POST",
+        body: JSON.stringify(values),
+      });
+      if (res.ok) {
+        setLoading(false);
+        toast.success(`Collection created`);
+        router.push("/collections");
+      }
+    } catch (err) {
+      console.log("[collections_POST]", err);
+      toast.error("Something went wrong! Please try again.");
+    }
+  };
+
   return (
     <div className="p-10">
       <p className="text-heading2-bold">Create Collection</p>
