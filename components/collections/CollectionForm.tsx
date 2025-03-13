@@ -20,6 +20,7 @@ import ImageUpload from '../custom ui/ImageUpload'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
+import Delete from '../custom ui/Delete'
 
 // Creamos el schema
 const formSchema = z.object({
@@ -28,8 +29,11 @@ const formSchema = z.object({
   image: z.string(),
 });
 
+interface CollectionFormPromps {
+  initialData?: CollectionType | null; //Must have question mark to make it optional
+}
 
-const CollectionForm = () => {
+const CollectionForm: React.FC<CollectionFormPromps> = ({initialData}) => {
   //Router permite interactuar con el enrutador de Next.js dentro de un componente funcional de React. (Para manejar navegacion en la app)
   const router = useRouter()
   // Para controlar errores
@@ -38,7 +42,7 @@ const CollectionForm = () => {
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: initialData ? initialData : {
       title: "",
       description: "",
       image: "",
@@ -49,13 +53,17 @@ const CollectionForm = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setLoading(true);
-      const res = await fetch("/api/collections", {
+      const url = initialData
+        ? `/api/collections/${initialData._id}`
+        : "/api/collections";
+      const res = await fetch(url, {
         method: "POST",
         body: JSON.stringify(values),
       });
       if (res.ok) {
         setLoading(false);
-        toast.success(`Collection created`);
+        toast.success(`Collection ${initialData ? "updated" : "created"}`);
+        window.location.href = "/collections"
         router.push("/collections");
       }
     } catch (err) {
@@ -66,7 +74,14 @@ const CollectionForm = () => {
 
   return (
     <div className="p-10">
-      <p className="text-heading2-bold">Create Collection</p>
+      {initialData ? (
+        <div className="flex items-center justify-between">
+          <p className="text-heading2-bold">Edit Collection</p>
+          <Delete id={initialData._id} item="collection" />
+        </div>
+      ) : (
+        <p className="text-heading2-bold">Create Collection</p>
+      )}
       <Separator className="bg-grey-1 mt-4 mb-7" />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
