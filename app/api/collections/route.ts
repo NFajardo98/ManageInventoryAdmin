@@ -52,21 +52,29 @@ export const POST = async (req: NextRequest) => {
 };
 
 // Manejo de la solicitud GET para obtener todas las colecciones
+// Manejo de la solicitud GET para obtener todas las colecciones
 export const GET = async (req: NextRequest) => {
   try {
-    // Conectamos a la base de datos
+    console.log("🔍 Connecting to the database...");
     await connectToDB();
 
-    // Obtenemos todas las colecciones ordenadas por fecha de creación (más reciente primero)
+    console.log("🔍 Fetching collections from MongoDB...");
     const collections = await Collection.find().sort({ createdAt: "desc" });
 
-    // Respondemos con la lista de colecciones en formato JSON
+    console.log("✅ Collections found:", collections.length);
+    
+    if (!collections || collections.length === 0) {
+      console.warn("⚠️ No collections found in the database.");
+    }
+
     return NextResponse.json(collections, { status: 200 });
   } catch (err) {
-    console.log("[collections_GET]", err);
+    console.error("[collections_GET] ❌", err);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 };
 
+
 // Forzamos que esta API sea dinámica en Next.js, para que no use caché en las respuestas
 export const dynamic = "force-dynamic";
+
