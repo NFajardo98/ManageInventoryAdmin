@@ -14,7 +14,7 @@ interface MultiSelectProps {
   placeholder: string;
   collections: CollectionType[];
   value: string[];
-  onChange: (value: string[]) => void; // ⬅ Recibe array en vez de un solo string
+  onChange: (value: string[]) => void; // ⬅ Receives an array instead of a single string
   onRemove: (value: string) => void;
 }
 
@@ -28,13 +28,15 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   const [inputValue, setInputValue] = useState("");
   const [open, setOpen] = useState(false);
 
-  // Filtrar las colecciones seleccionadas
-  const selected = value.map((id) =>
-    collections.find((collection) => collection._id === id)
-  ).filter(Boolean) as CollectionType[];
+  // Filter selected collections
+  const selected = value
+    .map((id) => collections.find((collection) => collection._id === id))
+    .filter(Boolean) as CollectionType[];
 
-  // Filtrar las colecciones que aún no se han seleccionado
-  const selectables = collections.filter((collection) => !value.includes(collection._id));
+  // Filter collections that are not yet selected
+  const selectables = collections.filter(
+    (collection) => !value.includes(collection._id)
+  );
 
   return (
     <Command className="overflow-visible bg-white">
@@ -69,7 +71,9 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                 key={collection._id}
                 onMouseDown={(e) => e.preventDefault()}
                 onSelect={() => {
-                  onChange([...value, collection._id]); // ✅ Ahora almacena todas las selecciones
+                  // Asegúrate de que no haya duplicados y actualiza el estado de forma inmutable
+                  const updatedValue = [...new Set([...value, collection._id])];
+                  onChange(updatedValue); // Pasa el array actualizado al componente padre
                   setInputValue("");
                 }}
                 className="hover:bg-grey-2 cursor-pointer"

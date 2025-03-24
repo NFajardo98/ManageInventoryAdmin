@@ -72,19 +72,26 @@ export const POST = async (
       expense,
     } = await req.json();
 
-    if (!title || !description || !media || !category || !price || !expense) {
-      return new NextResponse("Not enough data to create a new product", {
-        status: 400,
-      });
+    if (
+      !title ||
+      !description ||
+      !media ||
+      !category ||
+      !price ||
+      !expense ||
+      !Array.isArray(collections)
+    ) {
+      return new NextResponse("Invalid data provided", { status: 400 });
     }
 
     const addedCollections = collections.filter(
-      (collectionId: string) => !product.collections.includes(collectionId)
+      (collectionId: string) =>
+        !product.collections.some((collection: any) => collection._id.toString() === collectionId)
     );
-    // included in new data, but not included in the previous data
-
+    
     const removedCollections = product.collections.filter(
-      (collectionId: string) => !collections.includes(collectionId)
+      (collection: any) =>
+        !collections.includes(collection._id.toString())
     );
     // included in previous data, but not included in the new data
 
@@ -113,7 +120,7 @@ export const POST = async (
         description,
         media,
         category,
-        collections,
+        collections: collections.map((id: string) => id), // Asegúrate de que sean solo IDs
         tags,
         sizes,
         colors,
@@ -145,7 +152,7 @@ export const DELETE = async (
 
     await connectToDB();
 
-    const product = await Product.findById(params.productId);
+    const product = await Product.findById(params.productId).populate("collections");
 
     if (!product) {
       return new NextResponse(

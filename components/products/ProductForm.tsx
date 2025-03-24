@@ -102,6 +102,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    console.log("✅ Collections being sent to backend:", values.collections);
     try {
       setLoading(true);
       const url = initialData
@@ -283,7 +284,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
                         placeholder="Select collections"
                         collections={collections}
                         value={field.value}
-                        onChange={(newCollections) => field.onChange(newCollections)}
+                        onChange={(newCollections) =>
+                          field.onChange([...new Set([...field.value, ...newCollections])])
+                        }
                         onRemove={(idToRemove) =>
                           field.onChange(field.value.filter((collectionId) => collectionId !== idToRemove))
                         }
