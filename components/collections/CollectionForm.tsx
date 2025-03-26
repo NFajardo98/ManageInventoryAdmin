@@ -21,7 +21,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import Delete from '../custom ui/Delete'
-
+import { CollectionType } from '@/lib/types/collection'
 // Creamos el schema
 const formSchema = z.object({
   title: z.string().min(2).max(20),

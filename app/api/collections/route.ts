@@ -33,11 +33,16 @@ export const POST = async (req: NextRequest) => {
       return new NextResponse("Title and image are required", { status: 400 });
     }
 
+    // Obtener el último valor de `order` y calcular el siguiente
+    const lastCollection = await Collection.findOne({ order: { $exists: true } }).sort({ order: -1 });
+    const nextOrder = lastCollection && typeof lastCollection.order === "number" ? lastCollection.order + 1 : 1;
+
     // Creamos la nueva colección con los datos proporcionados
     const newCollection = await Collection.create({
       title,
       description,
       image,
+      order: nextOrder, // Asignar el valor calculado
     });
 
     // Guardamos la nueva colección en la base de datos
@@ -52,14 +57,13 @@ export const POST = async (req: NextRequest) => {
 };
 
 // Manejo de la solicitud GET para obtener todas las colecciones
-// Manejo de la solicitud GET para obtener todas las colecciones
 export const GET = async (req: NextRequest) => {
   try {
     console.log("🔍 Connecting to the database...");
     await connectToDB();
 
     console.log("🔍 Fetching collections from MongoDB...");
-    const collections = await Collection.find().sort({ createdAt: "desc" });
+    const collections = await Collection.find().sort({ order: 1 });
 
     console.log("✅ Collections found:", collections.length);
     
@@ -74,7 +78,57 @@ export const GET = async (req: NextRequest) => {
   }
 };
 
+export const PATCH = async (req: NextRequest) => {
+  try {
+    // Conectamos a la base de datos
+    await connectToDB();
 
+    // Extraemos los datos enviados en el cuerpo de la petición
+    const { collectionId, direction } = await req.json();
+
+    // Validamos los datos recibidos
+    if (!collectionId || !direction) {
+      return new NextResponse("Collection ID and direction are required", { status: 400 });
+    }
+
+    // Obtenemos la colección actual
+    const currentCollection = await Collection.findById(collectionId);
+    if (!currentCollection) {
+      return new NextResponse("Collection not found", { status: 404 });
+    }
+
+    // Determinamos la dirección del movimiento (arriba o abajo)
+    const swapOrder = direction === "up" ? currentCollection.order - 1 : currentCollection.order + 1;
+
+    // Verificar si el movimiento está fuera de los límites
+    const totalCollections = await Collection.countDocuments();
+    if (swapOrder < 1 || swapOrder > totalCollections) {
+      return new NextResponse("Cannot move collection out of bounds", { status: 400 });
+    }
+
+    // Buscamos la colección con el `order` que queremos intercambiar
+    const swapCollection = await Collection.findOne({ order: swapOrder });
+    if (!swapCollection) {
+      return new NextResponse("Cannot move in the specified direction", { status: 400 });
+    }
+
+    // Paso 1: Asignar un valor temporal para evitar conflictos
+    await Collection.updateOne({ _id: swapCollection._id }, { $set: { order: -1 } });
+
+    // Paso 2: Actualizar el `order` de la colección actual
+    const originalOrder = currentCollection.order; // Guardamos el valor original de `order`
+    currentCollection.order = swapOrder;
+    await currentCollection.save();
+
+    // Paso 3: Actualizar el `order` de la colección intercambiada
+    swapCollection.order = originalOrder;
+    await swapCollection.save();
+
+    return new NextResponse("Order updated successfully", { status: 200 });
+  } catch (err) {
+    console.error("[collections_PATCH]", err);
+    return new NextResponse("Internal Server Error", { status: 500 });
+  }
+};
 // Forzamos que esta API sea dinámica en Next.js, para que no use caché en las respuestas
 export const dynamic = "force-dynamic";
-

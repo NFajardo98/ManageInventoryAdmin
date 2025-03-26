@@ -1,10 +1,11 @@
-type CollectionType = {
-    _id: string;
-    title: string;
-    description: string;
-    image: string;
-    products: ProductType[];
-  }
+//type CollectionType = {
+//    _id: string;
+//    title: string;
+//    description: string;
+//    image: string;
+//    products: ProductType[];
+//    order: number;
+//  }
   
   type ProductType = {
     _id: string;

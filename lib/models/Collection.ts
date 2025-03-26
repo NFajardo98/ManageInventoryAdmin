@@ -18,6 +18,12 @@ const collectionSchema = new mongoose.Schema({
     required: true, // Es obligatorio
   },
 
+  order: {
+    type: Number,
+    required: true,
+    unique: true, // Asegura que cada colección tenga un número único
+  },
+
   // Almacena un array de identificadores de productos relacionados con la colección
   products: [       
     {

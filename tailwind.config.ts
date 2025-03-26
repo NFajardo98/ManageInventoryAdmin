@@ -82,6 +82,7 @@ const config: Config = {
         "blue-3": "#F5F7F9",
         "red-1": "#FF0000",
       },
+      
     },
   },
   plugins: [],
