@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDB } from "@/lib/mongoDB";
 import Product from "@/lib/models/Product";
 import Collection from "@/lib/models/Collection";
+import Inventory from "@/lib/models/Inventory";
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -19,16 +20,14 @@ export const POST = async (req: NextRequest) => {
       title,
       description,
       media,
-      category,
       collections,
-      tags,
-      sizes,
-      colors,
+      allergens,
+      inventory,
       price,
       expense,
     } = await req.json();
 
-    if (!title || !description || !media || !category || !price || !expense) {
+    if (!title || !description || !media || !collections|| !price || !expense) {
       return new NextResponse("Not enough data to create a product", {
         status: 400,
       });
@@ -38,11 +37,9 @@ export const POST = async (req: NextRequest) => {
       title,
       description,
       media,
-      category,
+      allergens,
       collections,
-      tags,
-      sizes,
-      colors,
+      inventory,
       price,
       expense,
     });
@@ -72,7 +69,8 @@ export const GET = async (req: NextRequest) => {
 
     const products = await Product.find()
       .sort({ createdAt: "desc" })
-      .populate({ path: "collections", model: Collection });
+      .populate({ path: "collections", model: Collection })
+      .populate({ path: "inventory", model: Inventory });  
 
     return NextResponse.json(products, { status: 200 });
   } catch (err) {

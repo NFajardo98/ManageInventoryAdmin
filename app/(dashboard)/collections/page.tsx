@@ -9,14 +9,15 @@ import { DataTable } from "@/components/custom ui/DataTable";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Loader from "@/components/custom ui/Loader";
+import { CollectionType } from "@/lib/types/collection"; // Importar el tipo CollectionType
 
 // Definir el tipo CollectionType
-type CollectionType = {
-  _id: string;
-  title: string;
-  order: number;
-  products?: any[];
-};
+//type CollectionType = {
+//  _id: string;
+//  title: string;
+//  order: number;
+//  products?: any[];
+//};
 
 const Collections = () => {
   const router = useRouter();
@@ -75,9 +76,7 @@ const Collections = () => {
 
           return updatedCollections;
         });
-      } else {
-        console.error("Failed to update order");
-      }
+      } 
     } catch (err) {
       console.error(err);
     }
@@ -113,3 +112,4 @@ const Collections = () => {
 };
 
 export default Collections;
+

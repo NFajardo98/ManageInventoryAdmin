@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 
 import Loader from "@/components/custom ui/Loader";
 import CollectionForm from "@/components/collections/CollectionForm";
+import { CollectionType } from "@/lib/types/collection"; // Importar el tipo CollectionType
 
 const CollectionDetails = () => {
   const params = useParams(); // ✅ Usar useParams() para obtener collectionId

@@ -2,20 +2,30 @@ import Collection from "@/lib/models/Collection";
 import Product from "@/lib/models/Product";
 import { connectToDB } from "@/lib/mongoDB";
 import { currentUser } from "@clerk/nextjs/server"; // Importamos `currentUser` en lugar de `auth`
+import Inventory from "@/lib/models/Inventory";
 
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (
   req: NextRequest,
-  { params }: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> } // Cambia el tipo de `params` a una promesa
 ) => {
   try {
     await connectToDB();
 
-    const product = await Product.findById(params.productId).populate({
-      path: "collections",
-      model: Collection,
-    });
+    // Usa `await` para desestructurar `params`
+    const { productId } = await params;
+
+    // Consulta el producto y popula los datos de los inventarios y colecciones
+    const product = await Product.findById(productId)
+      .populate({
+        path: "inventory", // Popula los datos del inventario
+        select: "title _id quantity", // Selecciona los campos necesarios
+      })
+      .populate({
+        path: "collections", // Popula las colecciones relacionadas
+        select: "title _id", // Selecciona los campos necesarios
+      });
 
     if (!product) {
       return new NextResponse(
@@ -23,10 +33,11 @@ export const GET = async (
         { status: 404 }
       );
     }
+
     return new NextResponse(JSON.stringify(product), {
       status: 200,
       headers: {
-        "Access-Control-Allow-Origin": `${process.env.ECOMMERCE_STORE_URL}`,
+        "Access-Control-Allow-Origin": `${process.env.MANAGE_INVENTORY_URL}`,
         "Access-Control-Allow-Methods": "GET",
         "Access-Control-Allow-Headers": "Content-Type",
       },
@@ -39,9 +50,17 @@ export const GET = async (
 
 export const POST = async (
   req: NextRequest,
-  { params }: { params: { productId: string } }
+  context: { params: { productId: string } }
 ) => {
   try {
+
+    const { params } = context; // Extrae `params` del contexto
+    console.log("✅ Received params:", params); // Log para verificar el valor de params
+    // Asegúrate de que `params` esté resuelto
+    if (!params || !params.productId) {
+      return new NextResponse("Product ID is required", { status: 400 });
+    }
+
     const user = await currentUser();
 
     if (!user) {
@@ -49,6 +68,10 @@ export const POST = async (
     }
 
     await connectToDB();
+
+    if (!params || !params.productId) {
+      return new NextResponse("Product ID is required", { status: 400 });
+    }
 
     const product = await Product.findById(params.productId);
 
@@ -63,11 +86,9 @@ export const POST = async (
       title,
       description,
       media,
-      category,
+      inventory,
       collections,
-      tags,
-      sizes,
-      colors,
+      allergens,
       price,
       expense,
     } = await req.json();
@@ -76,7 +97,7 @@ export const POST = async (
       !title ||
       !description ||
       !media ||
-      !category ||
+      !inventory ||
       !price ||
       !expense ||
       !Array.isArray(collections)
@@ -84,29 +105,35 @@ export const POST = async (
       return new NextResponse("Invalid data provided", { status: 400 });
     }
 
-    const addedCollections = collections.filter(
-      (collectionId: string) =>
-        !product.collections.some((collection: any) => collection._id.toString() === collectionId)
-    );
-    
-    const removedCollections = product.collections.filter(
-      (collection: any) =>
-        !collections.includes(collection._id.toString())
-    );
-    // included in previous data, but not included in the new data
+    // Filtrar added y removed inventory
+    const addedInventory = inventory
+      .map((item: { ingredientId: string; quantity: number }) => item.ingredientId)
+      .filter(
+        (ingredientId: string) =>
+          !product.inventory.some(
+            (inv: any) =>
+              inv.ingredientId && inv.ingredientId.toString() === ingredientId
+          )
+      );
 
-    // Update collections
+    const removedInventory = product.inventory.filter(
+      (inv: any) =>
+        !inventory.some(
+          (item: { ingredientId: string; quantity: number }) =>
+            inv.ingredientId &&
+            inv.ingredientId.toString() === item.ingredientId
+        )
+    );
+
+    // Actualizar inventario
     await Promise.all([
-      // Update added collections with this product
-      ...addedCollections.map((collectionId: string) =>
-        Collection.findByIdAndUpdate(collectionId, {
+      ...addedInventory.map((ingredientId: string) =>
+        Inventory.findByIdAndUpdate(ingredientId, {
           $push: { products: product._id },
         })
       ),
-
-      // Update removed collections without this product
-      ...removedCollections.map((collectionId: string) =>
-        Collection.findByIdAndUpdate(collectionId, {
+      ...removedInventory.map((inv: any) =>
+        Inventory.findByIdAndUpdate(inv.ingredientId, {
           $pull: { products: product._id },
         })
       ),
@@ -119,16 +146,20 @@ export const POST = async (
         title,
         description,
         media,
-        category,
-        collections: collections.map((id: string) => id), // Asegúrate de que sean solo IDs
-        tags,
-        sizes,
-        colors,
+        inventory: inventory.map((item: { ingredientId: string; quantity: number; title: string }) => ({
+          ingredientId: item.ingredientId,
+          quantity: item.quantity,
+          title: item.title,
+        })),
+        collections: collections.map((id: string) => id),
+        allergens,
         price,
         expense,
       },
       { new: true }
-    ).populate({ path: "collections", model: Collection });
+    )
+      .populate({ path: "collections", model: Collection })
+      .populate({ path: "inventory.ingredientId", model: Inventory });
 
     await updatedProduct.save();
 

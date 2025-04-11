@@ -3,6 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import Delete from "../custom ui/Delete";
 import Link from "next/link";
+import { ProductType } from "@/lib/types/product";
 
 export const columns: ColumnDef<ProductType>[] = [
   {
@@ -18,21 +19,17 @@ export const columns: ColumnDef<ProductType>[] = [
     ),
   },
   {
-    accessorKey: "category",
-    header: "Category",
-  },
-  {
     accessorKey: "collections",
     header: "Collections",
     cell: ({ row }) => row.original.collections.map((collection) => collection.title).join(", "),
   },
   {
     accessorKey: "price",
-    header: "Price ($)",
+    header: "Price €",
   },
   {
     accessorKey: "expense",
-    header: "Expense ($)",
+    header: "Expense €",
   },
   {
     id: "actions",

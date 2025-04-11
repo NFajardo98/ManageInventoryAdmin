@@ -97,14 +97,20 @@ export const PATCH = async (req: NextRequest) => {
       return new NextResponse("Collection not found", { status: 404 });
     }
 
+    // Verificar si la colección está en el límite superior o inferior
+    if (direction === "up" && currentCollection.order === 1) {
+      return new NextResponse("Cannot move collection further up", { status: 400 });
+    }
+
+    // Calculamos el número total de colecciones
+    const totalCollections = await Collection.countDocuments();
+
+    if (direction === "down" && currentCollection.order === totalCollections) {
+      return new NextResponse("Cannot move collection further down", { status: 400 });
+    }
+
     // Determinamos la dirección del movimiento (arriba o abajo)
     const swapOrder = direction === "up" ? currentCollection.order - 1 : currentCollection.order + 1;
-
-    // Verificar si el movimiento está fuera de los límites
-    const totalCollections = await Collection.countDocuments();
-    if (swapOrder < 1 || swapOrder > totalCollections) {
-      return new NextResponse("Cannot move collection out of bounds", { status: 400 });
-    }
 
     // Buscamos la colección con el `order` que queremos intercambiar
     const swapCollection = await Collection.findOne({ order: swapOrder });

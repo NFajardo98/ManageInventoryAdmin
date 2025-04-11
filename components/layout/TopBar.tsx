@@ -33,8 +33,9 @@ const TopBar = () => {
   return (
     <div className="sticky top-0 z-20 w-full flex justify-between items-center px-8 py-4 bg-blue-2 shadow-xl lg:hidden relative">
       {/* Logo */}
-      <Image src="/logo.png" alt="logo" width={150} height={70} />
-
+      <Link href="/collections">
+        <Image src="/logo.png" alt="logo" width={150} height={70} className="cursor-pointer" />
+      </Link>
       {/* Enlaces visibles en pantallas medianas y grandes */}
       <div className="flex gap-8 max-md:hidden">
         {navLinks.map((link) => (
@@ -65,9 +66,8 @@ const TopBar = () => {
         {/* Menú desplegable con efecto de desplegado progresivo */}
         <div
           className={`absolute top-full left-0 w-screen bg-white shadow-xl transition-all duration-300 ease-in-out flex flex-col items-center 
-          rounded-lg overflow-hidden transform origin-top scale-y-0 opacity-0 ${
-            dropdownMenu ? "scale-y-100 opacity-100 py-5" : "py-0"
-          }`}
+          rounded-lg overflow-hidden transform origin-top scale-y-0 opacity-0 ${dropdownMenu ? "scale-y-100 opacity-100 py-5" : "py-0"
+            }`}
         >
           {navLinks.map((link) => (
             <Link

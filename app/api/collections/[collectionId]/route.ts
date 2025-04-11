@@ -3,15 +3,20 @@ import { currentUser } from "@clerk/nextjs/server"; // Importamos `currentUser` 
 
 import { connectToDB } from "@/lib/mongoDB";
 import Collection from "@/lib/models/Collection";
+import Product from "@/lib/models/Product";
 
 export const GET = async (
   req: NextRequest,
-  { params }: { params: { collectionId: string } }
+  { params }: { params: Promise<{ collectionId: string }> } // Cambia el tipo de `params` a una promesa
 ) => {
   try {
     await connectToDB();
 
-    const collection = await Collection.findById(params.collectionId);
+    // Usa `await` para desestructurar `params`
+    const { collectionId } = await params;
+
+    // Encuentra la colección por ID
+    const collection = await Collection.findById(collectionId);
 
     if (!collection) {
       return new NextResponse(
@@ -20,7 +25,11 @@ export const GET = async (
       );
     }
 
-    return NextResponse.json(collection, { status: 200 });
+    // Encuentra los productos asociados a la colección
+    const products = await Product.find({ collections: collectionId });
+
+    // Devuelve los detalles de la colección junto con los productos
+    return NextResponse.json({ ...collection.toObject(), products }, { status: 200 });
   } catch (err) {
     console.log("[collectionId_GET]", err);
     return new NextResponse("Internal error", { status: 500 });
