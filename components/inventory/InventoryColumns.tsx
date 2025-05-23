@@ -2,22 +2,35 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { InventoryColumnType } from "@/lib/types/inventory";
+import Link from "next/link";
 
 export const columns: ColumnDef<InventoryColumnType, unknown>[] = [
   {
-    accessorKey: "name", // Muestra el nombre del alimento
-    header: "Name",
-    cell: ({ row }) => <p>{row.original.title}</p>,
+    accessorKey: "title",
+    header: "Title",
+    cell: ({ row }) => (
+      <Link
+        href={`/inventory/${row.original._id}`}
+        className="hover:text-red-1"
+      >
+        {row.original.title}
+      </Link>
+    ),
   },
   {
-    accessorKey: "quantity", // Muestra la cantidad disponible
-    header: "Quantity",
-    cell: ({ row }) => <p>{row.original.quantity}</p>,
+    accessorKey: "stock", // Muestra la cantidad disponible
+    header: "Stock",
+    cell: ({ row }) => <p>{row.original.stock}</p>,
   },
   {
     accessorKey: "unit", // Muestra la unidad de medida
     header: "Unit",
     cell: ({ row }) => <p>{row.original.unit}</p>,
+  },
+  {
+    accessorKey: "unitPrice", // Muestra la unidad de medida
+    header: "Price per Unit",
+    cell: ({ row }) => <p>{row.original.unitPrice}</p>,
   },
   {
     accessorKey: "supplier", // Muestra el proveedor asociado

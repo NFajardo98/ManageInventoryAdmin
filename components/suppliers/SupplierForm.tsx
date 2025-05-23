@@ -21,29 +21,38 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import Delete from '../custom ui/Delete'
 import { SupplierType } from '@/lib/types/supplier'
+import { add } from 'date-fns'
 
 // Creamos el schema
 const formSchema = z.object({
   title: z.string().min(2).max(20),
   description: z.string().min(2).max(500).trim(),
+  email: z.string().email(),
+  address: z.string().min(2).max(100).trim(),
+  city: z.string().min(2).max(50).trim(),
+  country: z.string().min(2).max(50).trim(),
 });
 
 interface SupplierFormPromps {
   initialData?: SupplierType | null; //Must have question mark to make it optional
 }
 
-const SupplierForm: React.FC<SupplierFormPromps> = ({initialData}) => {
+const SupplierForm: React.FC<SupplierFormPromps> = ({ initialData }) => {
   //Router permite interactuar con el enrutador de Next.js dentro de un componente funcional de React. (Para manejar navegacion en la app)
   const router = useRouter()
   // Para controlar errores
-  const[loading, setLoading] = useState(false)
-  
+  const [loading, setLoading] = useState(false)
+
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData ? initialData : {
       title: "",
       description: "",
+      email: "",
+      address: "",
+      city: "",
+      country: "",
     },
   })
 
@@ -54,7 +63,7 @@ const SupplierForm: React.FC<SupplierFormPromps> = ({initialData}) => {
       const url = initialData
         ? `/api/suppliers/${initialData._id}`
         : "/api/suppliers";
-  
+
       const res = await fetch(url, {
         method: "POST",
         headers: {
@@ -62,7 +71,7 @@ const SupplierForm: React.FC<SupplierFormPromps> = ({initialData}) => {
         },
         body: JSON.stringify(values), // Asegúrate de que los datos coincidan con lo que espera el backend
       });
-  
+
       if (res.ok) {
         setLoading(false);
         toast.success(`Supplier ${initialData ? "updated" : "created"}`);
@@ -123,7 +132,64 @@ const SupplierForm: React.FC<SupplierFormPromps> = ({initialData}) => {
               </FormItem>
             )}
           />
+          {/* Form field email */}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input placeholder="Email" type="email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {/* Form field address */}
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Address</FormLabel>
+                <FormControl>
+                  <Input placeholder="Address" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
+          {/* Form field city */}
+          <FormField
+            control={form.control}
+            name="city"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>City</FormLabel>
+                <FormControl>
+                  <Input placeholder="City" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Form field country */}
+          <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Country</FormLabel>
+                <FormControl>
+                  <Input placeholder="Country" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <div className="flex gap-10">
             <Button type="submit" className="bg-blue-1 text-white">
               Submit
@@ -131,7 +197,7 @@ const SupplierForm: React.FC<SupplierFormPromps> = ({initialData}) => {
             <Button
               type="button"
               /*Cuando hacemos clic en discard nos va a mandar de vuelta al espacio de suppliers con el evento onClick*/
-              onClick={() => router.push("/suppliers")} 
+              onClick={() => router.push("/suppliers")}
               className="bg-blue-1 text-white"
             >
               Discard

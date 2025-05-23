@@ -9,7 +9,7 @@ export const GET = async (req: NextRequest) => {
   try {
     await connectToDB();
 
-    const suppliers = await Supplier.find(); // Obtiene todos los proveedores de la base de datos
+    const suppliers = await Supplier.find().sort({ createdAt: "desc" });
 
     return NextResponse.json(suppliers, { status: 200 });
   } catch (err) {
@@ -24,29 +24,28 @@ export const POST = async (req: NextRequest) => {
     const user = await currentUser();
 
     if (!user) {
-      return new NextResponse("Unauthorized", { status: 403 });
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
     await connectToDB();
 
-    const { title, description } = await req.json();
+    const { title, description, email, address, city, country } = await req.json();
 
-    if (!title) {
-      return new NextResponse("Title is required", { status: 400 });
+    if (!title || !email || !address || !city || !country) {
+      return new NextResponse("Title and email are required", { status: 400 });
     }
 
-    const existingSupplier = await Supplier.findOne({ title });
-
-    if (existingSupplier) {
-      return new NextResponse("Supplier already exists", { status: 400 });
-    }
+    const normalizedTitle = title.trim();
+    const normalizedEmail = email.trim().toLowerCase();
 
     const newSupplier = await Supplier.create({
-      title,
+      title: normalizedTitle,
+      email: normalizedEmail,
       description,
+      address,
+      city,
+      country,
     });
-
-    await newSupplier.save();
 
     return NextResponse.json(newSupplier, { status: 200 });
   } catch (err) {
@@ -54,3 +53,5 @@ export const POST = async (req: NextRequest) => {
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 };
+
+export const dynamic = "force-dynamic";

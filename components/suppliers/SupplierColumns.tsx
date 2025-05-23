@@ -11,7 +11,7 @@ export const columns: ColumnDef<SupplierType, unknown>[] = [
     cell: ({ row }) => (
       <Link
         href={`/suppliers/${row.original._id}`}
-        className="hover:text-blue-500"
+        className="hover:text-red-1"
       >
         {row.original.title}
       </Link>
@@ -23,11 +23,16 @@ export const columns: ColumnDef<SupplierType, unknown>[] = [
     cell: ({ row }) => <p>{row.original.email || "No email provided"}</p>,
   },
   {
-    accessorKey: "phone", // Muestra el número de teléfono del proveedor
-    header: "Phone",
-    cell: ({ row }) => <p>{row.original.phone || "No phone provided"}</p>,
+    accessorKey: "address", // Muestra el número de teléfono del proveedor
+    header: "Address",
+    cell: ({ row }) => <p>{row.original.address || "No address provided"}</p>,
   },
   {
+    accessorKey: "city", // Muestra el país del proveedor
+    header: "City",
+    cell: ({ row }) => <p>{row.original.city || "No city provided"}</p>,
+  },
+    {
     accessorKey: "country", // Muestra el país del proveedor
     header: "Country",
     cell: ({ row }) => <p>{row.original.country || "No country provided"}</p>,

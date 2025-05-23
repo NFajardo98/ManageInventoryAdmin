@@ -18,10 +18,10 @@ export async function POST(req: NextRequest) {
     await connectToDB();
 
     // Obtén los datos del cuerpo de la solicitud
-    const { cartItems, customer, totalAmount } = await req.json();
+    const { cartItems, customer, totalAmount, table } = await req.json();
 
     // Validación de datos
-    if (!cartItems || !customer || !totalAmount) {
+    if (!cartItems || !customer || !totalAmount || !table) {
       return new NextResponse("Missing required fields", { status: 400, headers: corsHeaders });
     }
 
@@ -34,8 +34,11 @@ export async function POST(req: NextRequest) {
           title: item.item.title,
           quantity: item.quantity,
           price: item.item.price,
-          ...(item.allergens && { allergens: item.allergens }),
-          ...(item.inventory && { inventory: item.inventory }),
+          allergens: item.item.allergens || [], // Ensure allergens are included
+          ingredients: item.item.inventories.map((inventory: any) => ({
+            ingredientId: inventory.inventory,
+            quantity: inventory.quantity,
+          })) || [], // Ensure ingredients are included
         };
     
         console.log("✅ Processing cart item for order:", productData); // Log para verificar cada producto
@@ -44,6 +47,7 @@ export async function POST(req: NextRequest) {
       }),
       totalAmount, // Monto total del pedido
       createdAt: new Date(), // Fecha de creación
+      table
     });
 
     // Guarda el pedido en la base de datos

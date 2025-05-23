@@ -1,7 +1,7 @@
 import { connectToDB } from "@/lib/mongoDB";
 import { NextRequest, NextResponse } from "next/server";
 import Inventory from "@/lib/models/Inventory";
-import Supplier from "@/lib/models/Supplier"; // Importa el modelo Supplier
+//import Supplier from "@/lib/models/Supplier"; // Importa el modelo Supplier
 
 // Manejo de la solicitud GET para obtener todo el inventario
 export const GET = async (req: NextRequest) => {
@@ -27,20 +27,23 @@ export const POST = async (req: NextRequest) => {
       await connectToDB();
   
       // Extraemos los datos enviados en el cuerpo de la petición
-      const { title, quantity, unit, description, supplier } = await req.json();
+      const { title, stock, unit, description, supplier, threshold, restockAmount, unitPrice } = await req.json();
   
       // Validamos que los campos obligatorios estén presentes
-      if (!title || !quantity || !unit || !supplier) {
-        return new NextResponse("Name, quantity, unit, and supplier are required", { status: 400 });
+      if (!title || !stock || !unit || !supplier || !threshold || !restockAmount || !unitPrice) {
+        return new NextResponse("Name, stock, unit, and supplier are required", { status: 400 });
       }
   
       // Creamos el nuevo elemento del inventario con los datos proporcionados
       const newInventoryItem = await Inventory.create({
         title,
-        quantity,
-        unit,
+        stock,
+        unitPrice,
+        unit: unit,
         description,
         supplier,
+        threshold,
+        restockAmount,
       });
   
       // Guardamos el nuevo elemento en la base de datos

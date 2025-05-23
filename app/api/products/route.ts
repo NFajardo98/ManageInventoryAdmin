@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server"; // Importamos `currentUser` en lugar de `auth`
 import { NextRequest, NextResponse } from "next/server";
-
+import mongoose from "mongoose";
 import { connectToDB } from "@/lib/mongoDB";
 import Product from "@/lib/models/Product";
 import Collection from "@/lib/models/Collection";
@@ -21,29 +21,68 @@ export const POST = async (req: NextRequest) => {
       description,
       media,
       collections,
+      inventories,
       allergens,
-      inventory,
       price,
       expense,
     } = await req.json();
 
-    if (!title || !description || !media || !collections|| !price || !expense) {
+    console.log("✅ Data received in POST:", {
+      title,
+      description,
+      media,
+      collections,
+      inventories,
+      allergens,
+      price,
+      expense,
+    });
+    
+    if (
+      !title ||
+      !description ||
+      !media ||
+      !collections ||
+      !price ||
+      !expense ||
+      !Array.isArray(inventories) ||
+      !inventories.every(
+        (inv: { inventory: string; quantity: number }) =>
+          inv.inventory && typeof inv.quantity === "number"
+      )
+    ) {
       return new NextResponse("Not enough data to create a product", {
         status: 400,
       });
     }
-
+    console.log("✅ Data passed to Product.create:", {
+      title,
+      description,
+      media,
+      allergens,
+      collections,
+      inventories: inventories.map((inventory: { inventory: string; quantity: number }) => ({
+        inventory: inventory.inventory,
+        quantity: inventory.quantity,
+      })),
+      price,
+      expense,
+    });
+  
     const newProduct = await Product.create({
       title,
       description,
       media,
       allergens,
       collections,
-      inventory,
+      inventories: inventories.map((inventory: { inventory: string; quantity: number }) => ({
+        inventory: inventory.inventory,
+        quantity: inventory.quantity,
+      })),
       price,
       expense,
     });
-
+    console.log("New product created:", newProduct);
     await newProduct.save();
 
     if (collections) {
@@ -56,7 +95,11 @@ export const POST = async (req: NextRequest) => {
       }
     }
 
-    return NextResponse.json(newProduct, { status: 200 });
+    const populatedProduct = await Product.findById(newProduct._id)
+    .populate({ path: "collections", model: Collection })
+      .populate({ path: "inventories.inventory", model: Inventory });
+
+    return NextResponse.json(populatedProduct, { status: 200 });
   } catch (err) {
     console.log("[products_POST]", err);
     return new NextResponse("Internal Error", { status: 500 });
@@ -69,10 +112,17 @@ export const GET = async (req: NextRequest) => {
 
     const products = await Product.find()
       .sort({ createdAt: "desc" })
-      .populate({ path: "collections", model: Collection })
-      .populate({ path: "inventory", model: Inventory });  
+      .populate({ path: "collections", model: Collection });
+      
+    // Convierte `price` y `expense` a números para cada producto
+    const productsData = products.map((product) => {
+      const productObj = product.toObject();
+      productObj.price = parseFloat(productObj.price.toString());
+      productObj.expense = parseFloat(productObj.expense.toString());
+      return productObj;
+    });
 
-    return NextResponse.json(products, { status: 200 });
+    return NextResponse.json(productsData, { status: 200 });
   } catch (err) {
     console.log("[products_GET]", err);
     return new NextResponse("Internal Error", { status: 500 });

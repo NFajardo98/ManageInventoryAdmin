@@ -26,13 +26,20 @@ import MultiSelect from "../custom ui/MultiSelect";
 import Loader from "../custom ui/Loader";
 import { CollectionType } from "@/lib/types/collection";
 import { ProductType } from "@/lib/types/product";
-import { InventoryColumnType } from "@/lib/types/inventory";
 
 const formSchema = z.object({
   title: z.string().min(2).max(20),
   description: z.string().min(2).max(500).trim(),
   media: z.array(z.string()),
   collections: z.array(z.string()),
+  inventories: z
+    .array(
+      z.object({
+        inventory: z.string(), // ID del inventario
+        quantity: z.number().min(1), // Cantidad mínima de 1
+      })
+    )
+    .optional(),
   allergens: z.array(z.string()),
   price: z.coerce.number().min(0.1),
   expense: z.coerce.number().min(0.1),
@@ -49,7 +56,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
 
   const [loading, setLoading] = useState(true);
   const [collections, setCollections] = useState<CollectionType[]>([]);
-  const [inventory, setInventory] = useState<InventoryColumnType[]>([]);
+  const [inventories, setInventories] = useState<{ _id: string; title: string, stock:number, unitPrice: number }[]>([]);
 
   const getCollections = async () => {
     try {
@@ -65,42 +72,71 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
     }
   };
 
-  const getInventory = async () => {
+  const getInventories = async () => {
     try {
       const res = await fetch("/api/inventory", {
         method: "GET",
       });
-      const data: InventoryColumnType[] = await res.json();
-
-      setInventory(data); // Asigna directamente la respuesta al estado
+      const data = await res.json();
+      console.log("✅ Inventories fetched:", data); // Aquí
+      setInventories(data);
     } catch (err) {
-      console.log("[inventory_GET]", err);
+      console.log("[inventories_GET]", err);
       toast.error("Something went wrong! Please try again.");
     }
   };
 
+  
   useEffect(() => {
     getCollections();
+  }, []);
+
+  useEffect(() => {
+    getInventories();
   }, []);
 
   console.log("✅ ProductForm - initialData received:", initialData);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData
-    ? {
-      ...initialData,
-      collections: initialData.collections?.map((collection) => collection._id) || [],
-    }
+      ? {
+        ...initialData,
+        collections: initialData.collections?.map((collection) => collection._id) || [],
+        inventories: initialData.inventories?.map((inv) => ({
+          inventory: typeof inv.inventory === "string" ? inv.inventory : inv.inventory._id, // Asegúrate de que sea un string
+          quantity: inv.quantity, // Cantidad asociada
+        })) || [],
+        expense: initialData.expense || 0.1, // Asegúrate de que el expense esté definido
+      }
       : {
         title: "",
         description: "",
         media: [],
         collections: [],
+        inventories: [],
         allergens: [],
         price: 0.1,
         expense: 0.1,
       },
   });
+
+    // Efecto para calcular automáticamente el expense
+    useEffect(() => {
+      const calculateExpense = () => {
+        const inventoriesFromForm = form.getValues("inventories") || [];
+        const totalExpense = inventoriesFromForm.reduce(
+          (acc: number, inv: { inventory: string; quantity: number }) => {
+            const inventoryItem = inventories.find((item) => item._id === inv.inventory);
+            const unitPrice = inventoryItem?.unitPrice || 0;
+            return acc + unitPrice * inv.quantity;
+          },
+          0
+        );
+        form.setValue("expense", parseFloat(totalExpense.toFixed(2))); // Actualiza el campo expense
+      };
+    
+      calculateExpense();
+    }, [form.watch("inventories"), inventories]); // Observa los cambios en inventories y form.watch("inventories")
 
   const handleKeyPress = (
     e:
@@ -255,7 +291,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
                       type="number"
                       placeholder="Expense"
                       {...field}
-                      onKeyDown={handleKeyPress}
+                      disabled // Deshabilitado porque ahora es automático
                     />
                   </FormControl>
                   <FormMessage className="text-red-1" />
@@ -304,6 +340,75 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialData }) => {
                           field.onChange(field.value.filter((collectionId) => collectionId !== idToRemove))
                         }
                       />
+                    </FormControl>
+                    <FormMessage className="text-red-1" />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {inventories.length > 0 && (
+              <FormField
+                control={form.control}
+                name="inventories"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Inventories</FormLabel>
+                    <FormControl>
+                      <div className="space-y-4">
+                        {(field.value || []).map((inv, index) => (
+                          <div key={index} className="flex items-center gap-4">
+                            <select
+                              className="border rounded p-2 flex-1"
+                              value={inv.inventory}
+                              onChange={(e) => {
+                                const updatedInventories = [...(field.value || [])];
+                                updatedInventories[index].inventory = e.target.value;
+                                field.onChange(updatedInventories);
+                              }}
+                            >
+                              <option value="">Select Inventory</option>
+                              {inventories.map((inventory) => (
+                                <option key={inventory._id} value={inventory._id}>
+                                  {inventory.title}
+                                </option>
+                              ))}
+                            </select>
+                            <Input
+                              type="number"
+                              placeholder="Quantity"
+                              value={inv.quantity}
+                              onChange={(e) => {
+                                const updatedInventories = [...(field.value || [])];
+                                updatedInventories[index].quantity = Number(e.target.value);
+                                field.onChange(updatedInventories);
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              onClick={() => {
+                                const updatedInventories = (field.value || []).filter((_, i) => i !== index);
+                                field.onChange(updatedInventories);
+                              }}
+                              className="bg-red-500 text-white"
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          onClick={() =>
+                            field.onChange([
+                              ...(field.value || []),
+                              { inventory: "", quantity: 1 },
+                            ])
+                          }
+                          className="bg-blue-500 text-white"
+                        >
+                          Add Inventory
+                        </Button>
+                      </div>
                     </FormControl>
                     <FormMessage className="text-red-1" />
                   </FormItem>

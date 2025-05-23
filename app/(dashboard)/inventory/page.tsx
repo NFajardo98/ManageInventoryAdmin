@@ -38,7 +38,7 @@ const Inventory = () => {
   useEffect(() => {
     console.log("Inventory data:", inventory);
   }, [inventory]);
-  
+
   return loading ? (
     <Loader />
   ) : (
@@ -46,24 +46,34 @@ const Inventory = () => {
       <div className="flex items-center justify-between">
         <p className="text-heading2-bold">Inventory</p>
 
-        <Button
-          className="bg-blue-1 text-white hidden sm:flex items-center"
-          onClick={() => router.push("/inventory/new")}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Item
-        </Button>
+        <div className="flex gap-4">
+          <Button
+            className="bg-blue-1 text-white hidden sm:flex items-center"
+            onClick={() => router.push("/inventory/new")}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Item
+          </Button>
 
-        <Button
-          className="bg-blue-1 text-white flex sm:hidden p-2 rounded-full"
-          onClick={() => router.push("/inventory/new")}
-        >
-          <Plus className="h-5 w-5" />
-        </Button>
+          <Button
+            className="bg-blue-1 text-white flex sm:hidden p-2 rounded-full"
+            onClick={() => router.push("/inventory/new")}
+          >
+            <Plus className="h-5 w-5" />
+          </Button>
+
+          {/* Botón Check Threshold añadido al lado de Add Item */}
+          <Button
+            className="bg-blue-1 text-white"
+            onClick={() => router.push("/notifications")}
+          >
+            Check Threshold
+          </Button>
+        </div>
       </div>
 
       <Separator className="bg-grey-1 my-4" />
-      <DataTable columns={columns} data={inventory} searchKey="name" />
+      <DataTable columns={columns} data={inventory} searchKey="title" />
     </div>
   );
 };

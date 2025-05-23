@@ -14,8 +14,10 @@ export const GET = async (req: NextRequest) => {
       return {
         _id: order._id,
         products: order.products.length,
+        table: order.table,
         totalAmount: order.totalAmount,
-        createdAt: format(order.createdAt, "MMM do, yyyy")
+        createdAt: format(order.createdAt, "MMM do, yyyy"),
+        status: order.status, // Incluir el campo `status`
       }
     }))
 
