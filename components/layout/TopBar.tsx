@@ -33,8 +33,8 @@ const TopBar = () => {
   return (
     <div className="sticky top-0 z-20 w-full flex justify-between items-center px-8 py-4 bg-blue-2 shadow-xl lg:hidden relative">
       {/* Logo */}
-      <Link href="/collections">
-        <Image src="/logo.png" alt="logo" width={150} height={70} className="cursor-pointer" />
+      <Link href="/">
+        <Image src="/logo.png" alt="logo" width={150} height={70} className="cursor-pointer flex gap-4 text-body-medium font-medium transition-all duration-300 ease-in-out hover:scale-105 hover:opacity-90" />
       </Link>
       {/* Enlaces visibles en pantallas medianas y grandes */}
       <div className="flex gap-8 max-md:hidden">

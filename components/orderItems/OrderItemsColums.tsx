@@ -4,13 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { OrderItemType } from "@/lib/types/orderItem";
 
 export const columns: ColumnDef<OrderItemType>[] = [
-  {
-    accessorKey: "_id",
-    header: "Product ID",
-    cell: ({ row }) => {
-      return <span>{row.original._id}</span>;
-    },
-  },
+
   {
     accessorKey: "title",
     header: "Product",
@@ -19,7 +13,13 @@ export const columns: ColumnDef<OrderItemType>[] = [
   {
     accessorKey: "allergens",
     header: "Allergens",
-    cell: ({ row }) => row.original.product?.allergens || "Unknown allergen",
+    cell: ({ row }) => {
+      // Accede directamente a los allergens
+      const allergens = row.original.allergens;
+      return allergens && allergens.length > 0
+        ? allergens.join(", ") // Muestra los allergens como una lista separada por comas
+        : "No allergens";
+    },
   },
   {
     accessorKey: "quantity",

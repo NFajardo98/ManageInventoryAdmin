@@ -5,13 +5,14 @@ import Inventory from "@/lib/models/Inventory";
 
 export const GET = async (
   req: NextRequest,
-  { params }: { params: { inventoryId: string } }
+  { params }: { params: Promise<{ inventoryId: string }> }
 ) => {
   try {
     await connectToDB();
 
-    // Encuentra el inventario por ID
-    const inventory = await Inventory.findById(params.inventoryId).populate("supplier");
+    const { inventoryId } = await params; // Usa await para desestructurar params
+
+    const inventory = await Inventory.findById(inventoryId).populate("supplier");
 
     if (!inventory) {
       return new NextResponse(
@@ -20,7 +21,6 @@ export const GET = async (
       );
     }
 
-    // Devuelve los detalles del inventario
     return NextResponse.json(inventory, { status: 200 });
   } catch (err) {
     console.log("[inventoryId_GET]", err);
@@ -30,7 +30,7 @@ export const GET = async (
 
 export const POST = async (
   req: NextRequest,
-  { params }: { params: { inventoryId: string } }
+  { params }: { params: Promise<{ inventoryId: string }> }
 ) => {
   try {
     const user = await currentUser();
@@ -41,24 +41,26 @@ export const POST = async (
 
     await connectToDB();
 
-    let inventory = await Inventory.findById(params.inventoryId);
+    // Usa await para desestructurar params
+    const { inventoryId } = await params;
+
+    let inventory = await Inventory.findById(inventoryId);
 
     if (!inventory) {
       return new NextResponse("Inventory item not found", { status: 404 });
     }
 
-    const { title, quantity, unit, description, supplier } = await req.json();
-
-    if (!title || !quantity || !unit || !supplier) {
-      return new NextResponse(
-        "Title, quantity, unit, and supplier are required",
-        { status: 400 }
-      );
+    const { title, stock, unit, description, supplier, threshold, restockAmount } =
+      await req.json();
+      //console.log("Request body:", await req.json());
+    if (!title || !stock || !unit || !supplier || !threshold || !restockAmount) {
+      return new NextResponse("All fields are required", { status: 400 });
     }
 
+
     inventory = await Inventory.findByIdAndUpdate(
-      params.inventoryId,
-      { title, quantity, unit, description, supplier },
+      inventoryId,
+      { title, stock, unit, description, supplier, threshold, restockAmount },
       { new: true }
     );
 

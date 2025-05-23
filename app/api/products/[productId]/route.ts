@@ -1,9 +1,8 @@
 import Collection from "@/lib/models/Collection";
 import Product from "@/lib/models/Product";
+import Inventory from "@/lib/models/Inventory";
 import { connectToDB } from "@/lib/mongoDB";
 import { currentUser } from "@clerk/nextjs/server"; // Importamos `currentUser` en lugar de `auth`
-import Inventory from "@/lib/models/Inventory";
-
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (
@@ -16,14 +15,14 @@ export const GET = async (
     // Usa `await` para desestructurar `params`
     const { productId } = await params;
 
-    // Consulta el producto y popula los datos de los inventarios y colecciones
+    // Consulta el producto y popula los datos de las colecciones
     const product = await Product.findById(productId)
       .populate({
-        path: "inventory", // Popula los datos del inventario
-        select: "title _id quantity", // Selecciona los campos necesarios
+        path: "collections", // Popula las colecciones relacionadas
+        select: "title _id", // Selecciona los campos necesarios
       })
       .populate({
-        path: "collections", // Popula las colecciones relacionadas
+        path: "inventories", // Popula las colecciones relacionadas
         select: "title _id", // Selecciona los campos necesarios
       });
 
@@ -34,7 +33,13 @@ export const GET = async (
       );
     }
 
-    return new NextResponse(JSON.stringify(product), {
+    const productData = product.toObject();
+
+    // Convierte `price` y `expense` explícitamente a números
+    productData.price = parseFloat(productData.price.toString());
+    productData.expense = parseFloat(productData.expense.toString());
+
+    return new NextResponse(JSON.stringify(productData), {
       status: 200,
       headers: {
         "Access-Control-Allow-Origin": `${process.env.MANAGE_INVENTORY_URL}`,
@@ -50,14 +55,14 @@ export const GET = async (
 
 export const POST = async (
   req: NextRequest,
-  context: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> } // Cambia el tipo de `params` a una promesa
 ) => {
   try {
+    // Usa `await` para desestructurar `params`
+    const { productId } = await params;
+    console.log("✅ Received productId:", productId); // Log para verificar el valor de productId
 
-    const { params } = context; // Extrae `params` del contexto
-    console.log("✅ Received params:", params); // Log para verificar el valor de params
-    // Asegúrate de que `params` esté resuelto
-    if (!params || !params.productId) {
+    if (!productId) {
       return new NextResponse("Product ID is required", { status: 400 });
     }
 
@@ -69,11 +74,7 @@ export const POST = async (
 
     await connectToDB();
 
-    if (!params || !params.productId) {
-      return new NextResponse("Product ID is required", { status: 400 });
-    }
-
-    const product = await Product.findById(params.productId);
+    const product = await Product.findById(productId);
 
     if (!product) {
       return new NextResponse(
@@ -86,8 +87,8 @@ export const POST = async (
       title,
       description,
       media,
-      inventory,
       collections,
+      inventories,
       allergens,
       price,
       expense,
@@ -96,48 +97,13 @@ export const POST = async (
     if (
       !title ||
       !description ||
-      !media ||
-      !inventory ||
+      //!media ||
       !price ||
       !expense ||
       !Array.isArray(collections)
     ) {
       return new NextResponse("Invalid data provided", { status: 400 });
     }
-
-    // Filtrar added y removed inventory
-    const addedInventory = inventory
-      .map((item: { ingredientId: string; quantity: number }) => item.ingredientId)
-      .filter(
-        (ingredientId: string) =>
-          !product.inventory.some(
-            (inv: any) =>
-              inv.ingredientId && inv.ingredientId.toString() === ingredientId
-          )
-      );
-
-    const removedInventory = product.inventory.filter(
-      (inv: any) =>
-        !inventory.some(
-          (item: { ingredientId: string; quantity: number }) =>
-            inv.ingredientId &&
-            inv.ingredientId.toString() === item.ingredientId
-        )
-    );
-
-    // Actualizar inventario
-    await Promise.all([
-      ...addedInventory.map((ingredientId: string) =>
-        Inventory.findByIdAndUpdate(ingredientId, {
-          $push: { products: product._id },
-        })
-      ),
-      ...removedInventory.map((inv: any) =>
-        Inventory.findByIdAndUpdate(inv.ingredientId, {
-          $pull: { products: product._id },
-        })
-      ),
-    ]);
 
     // Update product
     const updatedProduct = await Product.findByIdAndUpdate(
@@ -146,20 +112,19 @@ export const POST = async (
         title,
         description,
         media,
-        inventory: inventory.map((item: { ingredientId: string; quantity: number; title: string }) => ({
-          ingredientId: item.ingredientId,
-          quantity: item.quantity,
-          title: item.title,
-        })),
-        collections: collections.map((id: string) => id),
+        collections: collections.map((id: string) => id), // Procesa las colecciones como un array de IDs
+        inventories: inventories.map((inventory: { inventory: string; quantity: number }) => ({
+          inventory: inventory.inventory, // ID del inventario
+          quantity: inventory.quantity,   // Cantidad asociada
+        })), // Procesa los inventarios como un array de objetos con ID y cantidad
         allergens,
         price,
         expense,
       },
       { new: true }
     )
-      .populate({ path: "collections", model: Collection })
-      .populate({ path: "inventory.ingredientId", model: Inventory });
+      .populate({ path: "collections", model: Collection }) // Popula las colecciones
+      .populate({ path: "inventories.inventory", model: Inventory }); // Popula los inventarios
 
     await updatedProduct.save();
 
@@ -172,9 +137,17 @@ export const POST = async (
 
 export const DELETE = async (
   req: NextRequest,
-  { params }: { params: { productId: string } }
+  { params }: { params: Promise<{ productId: string }> } // Cambia el tipo de `params` a una promesa
 ) => {
   try {
+    // Usa `await` para desestructurar `params`
+    const { productId } = await params;
+    console.log("✅ Received productId:", productId); // Log para verificar el valor de productId
+
+    if (!productId) {
+      return new NextResponse("Product ID is required", { status: 400 });
+    }
+
     const user = await currentUser();
 
     if (!user) {
@@ -183,7 +156,7 @@ export const DELETE = async (
 
     await connectToDB();
 
-    const product = await Product.findById(params.productId).populate("collections");
+    const product = await Product.findById(productId).populate("collections");
 
     if (!product) {
       return new NextResponse(

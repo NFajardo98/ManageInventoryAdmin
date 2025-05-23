@@ -1,7 +1,7 @@
 "use client";
 
 import { Separator } from "../ui/separator";
-import { z } from "zod";
+import { union, z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -21,12 +21,13 @@ import toast from "react-hot-toast";
 import Delete from "../custom ui/Delete";
 import MultiSelect from "@/components/custom ui/MultiSelect"; // Asegúrate de importar MultiSelect
 import { InventoryColumnType } from "@/lib/types/inventory";
-import { SupplierType } from "@/lib/types/supplier"; // Asegúrate de importar el tipo SupplierType
+//import { SupplierType } from "@/lib/types/supplier"; // Asegúrate de importar el tipo SupplierType
 
 // Creamos el schema para validar los datos del inventario
 const formSchema = z.object({
   title: z.string().min(2).max(50), // Nombre del alimento
-  quantity: z.number().min(1), // Cantidad mínima de 1
+  stock: z.number().min(1), // Cantidad mínima de 1
+  unitPrice: z.number().min(0), // Precio por unidad (mínimo 0)
   unit: z.enum(["kilos", "grams", "units"]), // Validación de unidades
   description: z.string().optional(), // Descripción opcional
   supplier: z.array(
@@ -35,6 +36,8 @@ const formSchema = z.object({
       title: z.string(), // Nombre del proveedor
     })
   ).min(1, "At least one supplier is required"), // Lista de proveedores
+  threshold: z.number().min(1, "Threshold must be at least 1"), // Validación del umbral
+  restockAmount: z.number().min(1, "Restock amount must be at least 1"), // Validación de la cantidad de reposición
 });
 
 interface InventoryFormProps {
@@ -70,12 +73,17 @@ const InventoryForm: React.FC<InventoryFormProps> = ({ initialData }) => {
           unit: ["kilos", "grams", "units"].includes(initialData.unit)
             ? (initialData.unit as "kilos" | "grams" | "units")
             : undefined, // Maneja valores no válidos
+          supplier: initialData.supplier || [], // Asegúrate de que supplier sea un array
+
         }
       : {
           title: "",
-          quantity: 0,
-          unit: undefined,
+          stock: 0,
+          unitPrice: 0,
+          unit: "kilos",
           description: "",
+          threshold: 0,
+          restockAmount: 0,
           supplier: [],
         },
   });
@@ -88,7 +96,7 @@ const InventoryForm: React.FC<InventoryFormProps> = ({ initialData }) => {
         : "/api/inventory";
 
       const res = await fetch(url, {
-        method: initialData ? "PUT" : "POST",
+        method: initialData ? "POST" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -140,14 +148,14 @@ const InventoryForm: React.FC<InventoryFormProps> = ({ initialData }) => {
           {/* Campo para la cantidad */}
           <FormField
             control={form.control}
-            name="quantity"
+            name="stock"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Quantity</FormLabel>
+                <FormLabel>Stock</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
-                    placeholder="Quantity"
+                    placeholder="Stock"
                     {...field}
                     onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)} // Convertir a número
                   />
@@ -228,6 +236,71 @@ const InventoryForm: React.FC<InventoryFormProps> = ({ initialData }) => {
               )}
             />
           )}
+
+        {/* Campo para el umbral */}
+        <FormField
+          control={form.control}
+          name="threshold"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Threshold</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="Threshold"
+                  {...field}
+                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+  
+          {/* Campo para el precio por unidad */}
+        <FormField
+          control={form.control}
+          name="unitPrice"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Unit Price</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  step="0.01" // Permite ingresar valores con dos decimales
+                  placeholder="Unit Price"
+                  {...field}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value);
+                    field.onChange(!isNaN(value) ? value : 0); // Asegúrate de que el valor sea un número válido
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Campo para la cantidad de reposición */}
+        <FormField
+          control={form.control}
+          name="restockAmount"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Restock Amount</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="Restock Amount"
+                  {...field}
+                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
           <div className="flex gap-10">
             <Button type="submit" className="bg-blue-1 text-white" disabled={loading}>
               {loading ? "Submitting..." : "Submit"}

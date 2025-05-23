@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server"; // Importamos `currentUser` en lugar de `auth`
+import { currentUser } from "@clerk/nextjs/server";
 
 import { connectToDB } from "@/lib/mongoDB";
 import Collection from "@/lib/models/Collection";
 import Product from "@/lib/models/Product";
 
+// Obtener una colección por ID
 export const GET = async (
   req: NextRequest,
-  { params }: { params: Promise<{ collectionId: string }> } // Cambia el tipo de `params` a una promesa
+  { params }: { params: Promise<{ collectionId: string }> }
 ) => {
   try {
     await connectToDB();
@@ -36,9 +37,10 @@ export const GET = async (
   }
 };
 
+// Actualizar una colección por ID
 export const POST = async (
   req: NextRequest,
-  { params }: { params: { collectionId: string } }
+  { params }: { params: Promise<{ collectionId: string }> }
 ) => {
   try {
     const user = await currentUser();
@@ -49,7 +51,10 @@ export const POST = async (
 
     await connectToDB();
 
-    let collection = await Collection.findById(params.collectionId);
+    // Usa `await` para desestructurar `params`
+    const { collectionId } = await params;
+
+    let collection = await Collection.findById(collectionId);
 
     if (!collection) {
       return new NextResponse("Collection not found", { status: 404 });
@@ -62,12 +67,10 @@ export const POST = async (
     }
 
     collection = await Collection.findByIdAndUpdate(
-      params.collectionId,
+      collectionId,
       { title, description, image },
       { new: true }
     );
-
-    await collection.save();
 
     return NextResponse.json(collection, { status: 200 });
   } catch (err) {
@@ -76,9 +79,10 @@ export const POST = async (
   }
 };
 
+// Eliminar una colección por ID
 export const DELETE = async (
   req: NextRequest,
-  { params }: { params: { collectionId: string } }
+  { params }: { params: Promise<{ collectionId: string }> }
 ) => {
   try {
     const user = await currentUser();
@@ -89,8 +93,17 @@ export const DELETE = async (
 
     await connectToDB();
 
-    await Collection.findByIdAndDelete(params.collectionId);
-    
+    // Usa `await` para desestructurar `params`
+    const { collectionId } = await params;
+
+    const collection = await Collection.findById(collectionId);
+
+    if (!collection) {
+      return new NextResponse("Collection not found", { status: 404 });
+    }
+
+    await Collection.findByIdAndDelete(collectionId);
+
     return new NextResponse("Collection is deleted", { status: 200 });
   } catch (err) {
     console.log("[collectionId_DELETE]", err);

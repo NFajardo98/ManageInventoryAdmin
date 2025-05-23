@@ -12,8 +12,8 @@ const LeftSideBar = () => {
 
   return (
     <div className="h-screen left-0 top-0 sticky p-10 flex flex-col gap-16 bg-blue-2 shadow-xl max-lg:hidden">
-      <Link href="/collections">
-        <Image src="/logo.png" alt="logo" width={150} height={70} className="cursor-pointer" />
+      <Link href="/">
+        <Image src="/logo.png" alt="logo" width={150} height={70} className="cursor-pointer flex gap-4 text-body-medium font-medium transition-all duration-300 ease-in-out hover:scale-105 hover:opacity-90" />
       </Link>
       <div className="flex flex-col gap-12">
         {navLinks.map((link) => (

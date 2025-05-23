@@ -32,4 +32,9 @@ export const navLinks = [
     icon: <Truck />, // Ícono para proveedores
     label: "Suppliers",
   },
+  {
+    url: "/notifications",
+    icon: <ClipboardList />, // Ícono para notificaciones
+    label: "Notifications",
+  },
 ];
