@@ -145,18 +145,29 @@ export const POST = async (
     return new NextResponse(
       JSON.stringify({
         message: "Internal Server Error",
-        error: typeof err === "object" && err !== null && "message" in err ? (err as any).message : "Unknown error",
+        error:   
+            typeof err === "object" &&
+            err !== null &&
+            "message" in err &&
+            typeof (err as { message?: unknown }).message === "string"
+              ? (err as { message: string }).message
+              : "Unknown error",
       }),
       { status: 500 }
     );
   }
 };
 
-export const DELETE = async (req: NextRequest, { params }: { params: { orderId: string } }) => {
+export const DELETE = async (
+  req: NextRequest,
+  { params }: { params: Promise<{ orderId: string }> }
+) => {
   try {
     await connectToDB();
 
-    const deletedOrder = await Order.findByIdAndDelete(params.orderId);
+    const { orderId } = await params; // <-- Desestructura usando await
+
+    const deletedOrder = await Order.findByIdAndDelete(orderId);
 
     if (!deletedOrder) {
       return new NextResponse("Order not found", { status: 404 });

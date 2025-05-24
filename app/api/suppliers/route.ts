@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Supplier from "@/lib/models/Supplier";
 
 // Maneja el método GET para obtener todos los proveedores
-export const GET = async (req: NextRequest) => {
+export const GET = async () => {
   try {
     await connectToDB();
 

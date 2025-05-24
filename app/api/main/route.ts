@@ -6,7 +6,7 @@ import Order from "@/lib/models/Order";
 
 import { NextRequest, NextResponse } from "next/server";
 
-export const GET = async (req: NextRequest) => {
+export const GET = async () => {
   try {
     await connectToDB();
 

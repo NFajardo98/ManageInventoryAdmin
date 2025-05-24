@@ -21,7 +21,6 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import Delete from '../custom ui/Delete'
 import { SupplierType } from '@/lib/types/supplier'
-import { add } from 'date-fns'
 
 // Creamos el schema
 const formSchema = z.object({
@@ -191,8 +190,8 @@ const SupplierForm: React.FC<SupplierFormPromps> = ({ initialData }) => {
             )}
           />
           <div className="flex gap-10">
-            <Button type="submit" className="bg-blue-1 text-white">
-              Submit
+            <Button type="submit" className="bg-blue-1 text-white" disabled={loading}>
+              {loading ? "Submitting..." : "Submit"}
             </Button>
             <Button
               type="button"
