@@ -1,6 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server"; // Importamos `currentUser` en lugar de `auth`
 import { NextRequest, NextResponse } from "next/server";
-import mongoose from "mongoose";
 import { connectToDB } from "@/lib/mongoDB";
 import Product from "@/lib/models/Product";
 import Collection from "@/lib/models/Collection";
@@ -106,7 +105,7 @@ export const POST = async (req: NextRequest) => {
   }
 };
 
-export const GET = async (req: NextRequest) => {
+export const GET = async () => {
   try {
     await connectToDB();
 

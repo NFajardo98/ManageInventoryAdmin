@@ -137,8 +137,8 @@ const CollectionForm: React.FC<CollectionFormPromps> = ({initialData}) => {
             )}
           />
           <div className="flex gap-10">
-            <Button type="submit" className="bg-blue-1 text-white">
-              Submit
+            <Button type="submit" className="bg-blue-1 text-white" disabled={loading}>
+              {loading ? "Submitting..." : "Submit"}
             </Button>
             <Button
               type="button"

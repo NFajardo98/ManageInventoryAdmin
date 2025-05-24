@@ -14,7 +14,7 @@ const TopBar = () => {
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 0
   );
-  const pathname = usePathname();
+  //const pathname = usePathname();
 
   useEffect(() => {
     const handleResize = () => {

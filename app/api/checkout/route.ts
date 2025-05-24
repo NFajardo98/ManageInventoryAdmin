@@ -12,13 +12,40 @@ export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders });
 }
 
+interface InventoryItem {
+  inventory: string;
+  quantity: number;
+}
+
+interface CartProduct {
+  _id: string;
+  title: string;
+  price: number;
+  allergens?: string[];
+  inventories: InventoryItem[];
+}
+
+interface CartItem {
+  item: CartProduct;
+  quantity: number;
+}
+
+interface Customer {
+  clerkId: string;
+}
+
 export async function POST(req: NextRequest) {
   try {
     // Conecta a la base de datos
     await connectToDB();
 
     // Obtén los datos del cuerpo de la solicitud
-    const { cartItems, customer, totalAmount, table } = await req.json();
+    const { cartItems, customer, totalAmount, table }: {
+      cartItems: CartItem[];
+      customer: Customer;
+      totalAmount: number;
+      table: string;
+    } = await req.json();
 
     // Validación de datos
     if (!cartItems || !customer || !totalAmount || !table) {
@@ -28,25 +55,24 @@ export async function POST(req: NextRequest) {
     // Crea un nuevo pedido
     const newOrder = new Order({
       customerClerkId: customer.clerkId, // ID del cliente
-      products: cartItems.map((item: any) => {
+      products: cartItems.map((item) => {
         const productData = {
           productId: item.item._id,
           title: item.item.title,
           quantity: item.quantity,
           price: item.item.price,
-          allergens: item.item.allergens || [], // Ensure allergens are included
-          ingredients: item.item.inventories.map((inventory: any) => ({
+          allergens: item.item.allergens || [],
+          ingredients: item.item.inventories.map((inventory) => ({
             ingredientId: inventory.inventory,
             quantity: inventory.quantity,
-          })) || [], // Ensure ingredients are included
+          })) || [],
         };
-    
-        console.log("✅ Processing cart item for order:", productData); // Log para verificar cada producto
+        console.log("✅ Processing cart item for order:", productData); 
     
         return productData;
       }),
-      totalAmount, // Monto total del pedido
-      createdAt: new Date(), // Fecha de creación
+      totalAmount, 
+      createdAt: new Date(), 
       table
     });
 

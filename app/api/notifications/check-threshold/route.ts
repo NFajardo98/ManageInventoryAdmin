@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDB } from "@/lib/mongoDB";
 import { checkThreshold } from "@/lib/utils/inventoryUtils";
 
-export const GET = async (req: NextRequest) => {
+export const GET = async () => {
   try {
     await connectToDB();
 

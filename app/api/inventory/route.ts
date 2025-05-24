@@ -4,7 +4,7 @@ import Inventory from "@/lib/models/Inventory";
 //import Supplier from "@/lib/models/Supplier"; // Importa el modelo Supplier
 
 // Manejo de la solicitud GET para obtener todo el inventario
-export const GET = async (req: NextRequest) => {
+export const GET = async () => {
   try {
     // Conectamos a la base de datos
     await connectToDB();

@@ -55,7 +55,7 @@ const Delete: React.FC<DeleteProps> = ({ item, id }) => {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button className="bg-red-1 text-white">
+        <Button className="bg-red-1 text-white" disabled={loading}>
           <Trash className="h-4 w-4" />
         </Button>
       </AlertDialogTrigger>

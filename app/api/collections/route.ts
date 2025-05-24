@@ -57,7 +57,7 @@ export const POST = async (req: NextRequest) => {
 };
 
 // Manejo de la solicitud GET para obtener todas las colecciones
-export const GET = async (req: NextRequest) => {
+export const GET = async () => {
   try {
     console.log("🔍 Connecting to the database...");
     await connectToDB();

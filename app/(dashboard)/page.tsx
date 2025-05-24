@@ -2,6 +2,7 @@
 
 import { LineChart, Line, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 interface TopOrderedProductType {
   title: string;
@@ -92,26 +93,26 @@ export default function Home() {
     
       {/* Quick Statistics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-        <a href="/products" className="p-6 bg-blue-100 rounded-lg shadow hover:bg-blue-200 transition">
+        <Link  href="/products" className="p-6 bg-blue-100 rounded-lg shadow hover:bg-blue-200 transition">
           <h3 className="text-lg font-bold text-blue-800">Total Products</h3>
           <p className="text-2xl font-bold">{statistics.totalProducts}</p>
-        </a>
-        <a href="/notifications" className="p-6 bg-green-100 rounded-lg shadow hover:bg-green-200 transition">
+        </Link >
+        <Link href="/notifications" className="p-6 bg-green-100 rounded-lg shadow hover:bg-green-200 transition">
           <h3 className="text-lg font-bold text-green-800">Low Stock Items</h3>
           <p className="text-2xl font-bold">{statistics.lowStockItems}</p>
-        </a>
-        <a href="/suppliers" className="p-6 bg-yellow-100 rounded-lg shadow hover:bg-yellow-200 transition">
+        </Link>
+        <Link href="/suppliers" className="p-6 bg-yellow-100 rounded-lg shadow hover:bg-yellow-200 transition">
           <h3 className="text-lg font-bold text-yellow-800">Suppliers</h3>
           <p className="text-2xl font-bold">{statistics.totalSuppliers}</p>
-        </a>
-        <a href="/orders?status=pending" className="p-6 bg-red-100 rounded-lg shadow hover:bg-red-200 transition">
+        </Link>
+        <Link href="/orders?status=pending" className="p-6 bg-red-100 rounded-lg shadow hover:bg-red-200 transition">
           <h3 className="text-lg font-bold text-red-800">Pending Orders</h3>
           <p className="text-2xl font-bold">{statistics.pendingOrders}</p>
-        </a>
-        <a href="/orders?status=completed" className="p-6 bg-red-100 rounded-lg shadow hover:bg-red-200 transition">
+        </Link>
+        <Link href="/orders?status=completed" className="p-6 bg-red-100 rounded-lg shadow hover:bg-red-200 transition">
           <h3 className="text-lg font-bold text-red-800">Completed Orders</h3>
           <p className="text-2xl font-bold">{statistics.completedOrders}</p>
-        </a>
+        </Link>
         <div className="p-6 bg-red-100 rounded-lg shadow">
           <h3 className="text-lg font-bold text-red-800">Total Earnings</h3>
           <p className="text-2xl font-bold">{statistics.totalPendingAmount} €</p>
