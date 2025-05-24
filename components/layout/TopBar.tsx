@@ -4,7 +4,6 @@ import { UserButton } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import { Menu, ChevronDown } from "lucide-react";
 
 import { navLinks } from "@/lib/constants";

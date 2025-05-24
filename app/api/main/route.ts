@@ -4,7 +4,7 @@ import Inventory from "@/lib/models/Inventory";
 import Supplier from "@/lib/models/Supplier";
 import Order from "@/lib/models/Order";
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 export const GET = async () => {
   try {
