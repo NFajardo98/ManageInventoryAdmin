@@ -24,7 +24,7 @@ export const POST = async (req: NextRequest) => {
 
 
     // Enviar el correo utilizando emailUtils
-    await sendEmail(notification.email, "Low Stock Notification", notification.message, emailConfig.deliveryAddress, emailConfig.deliveryCity, emailConfig.topic);
+    await sendEmail(notification.email, "Low Stock Notification", notification.message, emailConfig.deliveryAddress, emailConfig.deliveryCity);
 
     // Actualizar el estado de la notificación a "pending"
     notification.deliveryAddress = emailConfig.deliveryAddress;
