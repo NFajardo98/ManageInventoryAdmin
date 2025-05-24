@@ -4,21 +4,21 @@ import { connectToDB } from "@/lib/mongoDB";
 import { NextRequest, NextResponse } from "next/server";
 import Inventory from "@/lib/models/Inventory";
 
-export const getOrders = async () => {
-  try {
-    const orders = await Order.find()
-      .populate({
-        path: "products.ingredients.ingredientId", // Popular el campo ingredientId
-        select: "title", // Solo traer el campo title del modelo Inventory
-      })
-      .exec();
+//export const getOrders = async () => {
+//  try {
+//    const orders = await Order.find()
+//      .populate({
+//        path: "products.ingredients.ingredientId", // Popular el campo ingredientId
+//        select: "title", // Solo traer el campo title del modelo Inventory
+//      })
+//      .exec();
 
-    return orders;
-  } catch (err) {
-    console.error("Error fetching orders:", err);
-    throw new Error("Failed to fetch orders");
-  }
-};
+//    return orders;
+//  } catch (err) {
+//    console.error("Error fetching orders:", err);
+//    throw new Error("Failed to fetch orders");
+//  }
+//};
 
 export const POST = async (
   req: NextRequest,
