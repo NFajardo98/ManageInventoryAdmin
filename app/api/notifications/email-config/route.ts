@@ -41,7 +41,6 @@ export const POST = async (req: NextRequest) => {
         topic,
         deliveryAddress, // Incluye deliveryAddress desde el body
         deliveryCity,
-        topic,    // Incluye deliveryCity desde el body
       },
       { upsert: true, new: true }
     );

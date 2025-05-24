@@ -75,7 +75,7 @@ export const POST = async (
 
 export const DELETE = async (
   req: NextRequest,
-  { params }: { params: { inventoryId: string } }
+  { params }: { params: Promise<{ inventoryId: string }> }
 ) => {
   try {
     const user = await currentUser();
@@ -86,7 +86,9 @@ export const DELETE = async (
 
     await connectToDB();
 
-    await Inventory.findByIdAndDelete(params.inventoryId);
+    const { inventoryId } = await params; // <-- Usa await aquí
+
+    await Inventory.findByIdAndDelete(inventoryId);
 
     return new NextResponse("Inventory item is deleted", { status: 200 });
   } catch (err) {
