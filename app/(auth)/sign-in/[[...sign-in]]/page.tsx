@@ -51,7 +51,7 @@ export default function Page() {
       </div>
 
       {/* Contenedor del formulario */}
-      <div className="relative z-10 bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+      <div className="relative z-10 bg-white p-8 rounded-lg shadow-lg w-full max-w-md mx-auto flex flex-col items-center justify-center">
         <SignIn
           appearance={{
             elements: {
